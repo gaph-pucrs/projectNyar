@@ -30,6 +30,7 @@ public:
 
 private:
     RobotState current_state_;
+    int error_counter_ = 0;
     rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr pub_;
     rclcpp::Client<sensor_interfaces::srv::I2cCommand>::SharedPtr client_;
     rclcpp::TimerBase::SharedPtr fsm_timer_;
@@ -68,8 +69,7 @@ private:
                 break;
 
             case RobotState::RUNNING:
-                // PASSO 2: TELEMETRIA CONTÍNUA (Transação Atômica Escreve + Lê)
-                // Aponta para o registrador 0x06 (Eixo X) e puxa 3 bytes sequenciais
+                // PASSO 2: TELEMETRIA CONTÍNUA (Transação Atômica)
                 request->write_data = {0x06}; 
                 request->length = 3;
 
@@ -78,10 +78,17 @@ private:
                     waiting_for_response_ = false;
                     auto response = future.get();
                     if (response->success && response->read_data.size() == 3) {
+                        error_counter_ = 0; // Sucesso! O sensor acordou.
                         process_and_publish(response->read_data);
                     } else {
-                        RCLCPP_ERROR(this->get_logger(), "Falha na leitura elétrica! Sensor desconectou?");
-                        current_state_ = RobotState::ERROR;
+                        error_counter_++;
+                        RCLCPP_WARN(this->get_logger(), "Sensor ocupado ou falha elétrica (Tentativa %d/10)...", error_counter_);
+                        
+                        if (error_counter_ >= 10) { 
+                            // Agora a mensagem de erro é diferente para sabermos que a FSM tentou!
+                            RCLCPP_ERROR(this->get_logger(), "Falha contínua na leitura elétrica! Sensor desconectou?");
+                            current_state_ = RobotState::ERROR;
+                        }
                     }
                 });
                 break;
