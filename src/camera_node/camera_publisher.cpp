@@ -24,7 +24,7 @@ class CameraPublisher : public rclcpp::Node {
             RCLCPP_INFO(this->get_logger(), "Câmera %d iniciada! Publicando a %d FPS.", camera_id, fps);
         }
 
-        pub_ = image_transport::create_publisher(this, "camera/image", 10);
+        pub_ = image_transport::create_publisher(this, "camera/image", rclcpp::QoS(10).get_rmw_qos_profile());
 
         auto period = std::chrono::milliseconds(1000 / fps);
         timer_ = this->create_wall_timer(period, std::bind(&CameraPublisher::timer_callback, this));
