@@ -14,7 +14,7 @@ class CameraPublisher : public rclcpp::Node {
         this->declare_parameter("camera_id", 0);
         this->declare_parameter("fps", 30);
 
-        int camera_id = this->get_parameter("fps").as_int();
+        int camera_id = this->get_parameter("camera_id").as_int();
         int fps = this->get_parameter("fps").as_int();
 
         cap_.open(camera_id);
