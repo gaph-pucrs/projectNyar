@@ -5,7 +5,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# 1. Buscar dependências do ROS 2 e OpenCV
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -21,18 +20,12 @@ set(dependencies
   OpenCV
 )
 
-# 2. Compilar o Nodo Publicador (Raspberry Pi)
+# Compilar apenas o Publicador
 add_executable(camera_publisher src/camera_publisher.cpp)
 ament_target_dependencies(camera_publisher ${dependencies})
 
-# 3. Compilar o Nodo Inscrito / Cérebro (Workstation)
-add_executable(camera_subscriber src/camera_subscriber.cpp)
-ament_target_dependencies(camera_subscriber ${dependencies})
-
-# 4. Regras de Instalação (Essencial para o comando "ros2 run" achar os binários)
 install(TARGETS
   camera_publisher
-  camera_subscriber
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
