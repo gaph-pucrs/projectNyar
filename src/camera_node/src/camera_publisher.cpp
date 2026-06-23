@@ -38,6 +38,8 @@ class CameraPublisher : public rclcpp::Node {
             cap_ >> frame; // pega o frame atual
             if (frame.empty()) return;
 
+            cv::resize(frame, frame, cv::Size(320, 240));
+
             // converter openCV Mat para sensor_msgs com cv_bridge
             std_msgs::msg::Header header;
             header.stamp = this->now();
