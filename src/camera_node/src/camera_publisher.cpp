@@ -17,7 +17,9 @@ class CameraPublisher : public rclcpp::Node {
         int camera_id = this->get_parameter("camera_id").as_int();
         int fps = this->get_parameter("fps").as_int();
 
-        cap_.open(camera_id);
+        std::string pipeline = "libcamerasrc ! video/x-raw, width=320, height=240, framerate=" + std::to_string(fps) + "/1 ! videoconvert ! appsink";
+        cap_.open(pipeline, cv::CAP_GSTREAMER);
+
         if (!cap_.isOpened()) {
             RCLCPP_ERROR(this->get_logger(), "ERRO: Nenhuma câmera encontrada no ID %d", camera_id);
         } else {
