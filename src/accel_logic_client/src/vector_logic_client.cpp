@@ -10,6 +10,7 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <fstream>
 // ---
 
 using namespace std::chrono_literals;
@@ -29,6 +30,18 @@ public:
 
         // 20 Hz loop drives the entire I2C transaction cycle
         fsm_timer_ = this->create_wall_timer(50ms, std::bind(&VectorLogicClient::fsm_cycle, this));
+
+        //statistic
+        start_time_ = this_.now().seconds();
+        csv_file_.open("accel_statistics.csv", std::ios::out | std::ios::trunc);
+        if (csv_file_.is_open()) {
+            csv_file_ << "elapsed_seconds, rtt_ms, one_way_latency_ms, average_ms, jitter_ms, p99_ms\n";
+        }
+        //
+
+    ~VectorLogicClient() {
+        if (csv_file_.is_open()) csv_file_.close();
+        }
     }
 
 private:
@@ -38,7 +51,9 @@ private:
 
     // statistics
     double request_time_ = 0.0;
+    double start_time_ = 0.0;
     std::vector<double> latencies_;
+    std::ofstream csv_file_;
     // ---
 
     rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr pub_;
@@ -116,6 +131,17 @@ private:
                         RCLCPP_INFO(this->get_logger(),
                             "Lat: %.2f ms | Média: %.2f ms | Desvio (Jitter): %.2f ms | Cauda (P99): %.2f ms",
                             latencia_ida_ms, media, desvio, p99);
+
+                        if (csv_file_.is_open()) {
+                            double elapsed = arrival_time - start_time_;
+                            csv_file_ << elapsed << ","
+                                      << (rtt * 1000.0) << ","
+                                      << latencia_ida_ms << ","
+                                      << media << ","
+                                      << desvio << ","
+                                      << p99 << "\n";
+                            csv_file_.flush(); // Força o Linux a salvar em disco imediatamente (evita perda se o robô cair)
+                        }
                         // --------------------------------------
 
                         auto response = future.get();
