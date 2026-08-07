@@ -27,17 +27,22 @@ public:
     VectorLogicClient() : Node("vector_logic_client"), current_state_(STATE::INITIALIZING) {
         pub_    = this->create_publisher<geometry_msgs::msg::Vector3>("/sensor/accel/vector", 10);
         client_ = this->create_client<sensor_interfaces::srv::I2cCommand>("/sensor/i2c_command");
-
-        // 20 Hz loop drives the entire I2C transaction cycle
         fsm_timer_ = this->create_wall_timer(50ms, std::bind(&VectorLogicClient::fsm_cycle, this));
 
-        //statistic
-        start_time_ = this_.now().seconds();
-        csv_file_.open("accel_statistics.csv", std::ios::out | std::ios::trunc);
+        // --- AGORA COM PARÂMETRO DINÂMICO ---
+        start_time_ = this->now().seconds();
+
+        // Declara o parâmetro "csv_filename" com um valor padrão caso nenhum seja passado
+        this->declare_parameter<std::string>("csv_filename", "accel_statistics.csv");
+
+        // Recupera o valor do parâmetro
+        std::string csv_filename = this->get_parameter("csv_filename").as_string();
+
+        csv_file_.open(csv_filename, std::ios::out | std::ios::trunc);
         if (csv_file_.is_open()) {
-            csv_file_ << "elapsed_seconds, rtt_ms, one_way_latency_ms, average_ms, jitter_ms, p99_ms\n";
+            csv_file_ << "elapsed_seconds,rtt_ms,one_way_latency_ms,average_ms,jitter_ms,p99_ms\n";
         }
-        //
+    }
 
     ~VectorLogicClient() {
         if (csv_file_.is_open()) csv_file_.close();
