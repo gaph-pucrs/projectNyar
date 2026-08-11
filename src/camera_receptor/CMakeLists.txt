@@ -13,15 +13,20 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 
 # === A FORJA ===
-add_executable(receptor_node src/receptor.cpp)
+# Usando o nome correto do arquivo .cpp que nós descobrimos antes
+add_executable(receptor_node src/camera_receptor.cpp)
 
 # === A UNIÃO ===
+# 1. Dependências exclusivas do ROS 2 (ament)
 ament_target_dependencies(receptor_node
   rclcpp
   sensor_msgs
   cv_bridge
-  OpenCV
 )
+
+# 2. Dependências nativas de C++ (OpenCV)
+target_include_directories(receptor_node PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(receptor_node ${OpenCV_LIBRARIES})
 
 # === O ARMAZENAMENTO ===
 install(TARGETS receptor_node
