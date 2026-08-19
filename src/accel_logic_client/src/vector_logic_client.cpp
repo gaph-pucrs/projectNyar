@@ -47,7 +47,6 @@ public:
     ~VectorLogicClient() {
         if (csv_file_.is_open()) csv_file_.close();
         }
-    }
 
 private:
     STATE current_state_;
