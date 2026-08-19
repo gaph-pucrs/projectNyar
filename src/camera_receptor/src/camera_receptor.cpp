@@ -1,6 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
-#include <cv_bridge/cv_bridge.h>
+#include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/opencv.hpp>
 #include <cstdio>
 #include <ctime> // Magia antiga  pra converter o relógio do sistema pra tempo humano e legivel
@@ -95,6 +95,10 @@ private:
     void picam_callback(const sensor_msgs::msg::CompressedImage::SharedPtr msg) {
         try {
             cv::Mat frame = cv_bridge::toCvCopy(msg, "bgr8")->image;
+
+	    // O -1 vira a imagem de cabeça para baixo E corrige a direita/esquerda (rotação de 180 graus)
+	    // O 0 vira apenas de cabeça para baixo (mas fica espelhado)
+	    cv::flip(frame_da_picam, frame_da_picam, -1);
 
             cv::putText(frame, "AZATHOTH Vision - PiCam CSI", cv::Point(20, 40),
                          cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(255, 0, 255), 2);
